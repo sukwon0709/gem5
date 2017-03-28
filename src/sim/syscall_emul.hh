@@ -290,6 +290,14 @@ SyscallReturn geteuidFunc(SyscallDesc *desc, int num,
 SyscallReturn getegidFunc(SyscallDesc *desc, int num,
                           Process *p, ThreadContext *tc);
 
+/// Target getdents() handler.
+SyscallReturn getdentsFunc(SyscallDesc *desc, int num,
+                           Process *p, ThreadContext *tc);
+
+/// Target getdents64() handler.
+SyscallReturn getdents64Func(SyscallDesc *desc, int num,
+                             Process *p, ThreadContext *tc);
+
 /// Target access() handler
 SyscallReturn accessFunc(SyscallDesc *desc, int num,
                          Process *p, ThreadContext *tc);

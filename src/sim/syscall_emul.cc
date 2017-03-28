@@ -32,6 +32,7 @@
 #include "sim/syscall_emul.hh"
 
 #include <fcntl.h>
+#include <sys/syscall.h>
 #include <unistd.h>
 
 #include <csignal>
@@ -382,6 +383,52 @@ gethostnameFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
     name.copyOut(tc->getMemProxy());
 
     return 0;
+}
+
+SyscallReturn
+getdentsFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
+{
+  int index = 0;
+  int tgt_fd = p->getSyscallArg(tc, index);
+  Addr buf_ptr = p->getSyscallArg(tc, index);
+  int nbytes = p->getSyscallArg(tc, index);
+
+  auto hbfdp = std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[tgt_fd]);
+  if (!hbfdp)
+    return -EBADF;
+  int sim_fd = hbfdp->getSimFD();
+
+  BufferArg bufArg(buf_ptr, nbytes);
+  int nread = syscall(SYS_getdents, sim_fd, bufArg.bufferPtr(), nbytes);
+  int errno_after_call = errno;
+
+  if (nread > 0)
+    bufArg.copyOut(tc->getMemProxy());
+
+  return (nread == -1) ? -errno_after_call : nread;
+}
+
+SyscallReturn
+getdents64Func(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
+{
+  int index = 0;
+  int tgt_fd = p->getSyscallArg(tc, index);
+  Addr buf_ptr = p->getSyscallArg(tc, index);
+  int nbytes = p->getSyscallArg(tc, index);
+
+  auto hbfdp = std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[tgt_fd]);
+  if (!hbfdp)
+    return -EBADF;
+  int sim_fd = hbfdp->getSimFD();
+
+  BufferArg bufArg(buf_ptr, nbytes);
+  int nread = syscall(SYS_getdents64, sim_fd, bufArg.bufferPtr(), nbytes);
+  int errno_after_call = errno;
+
+  if (nread > 0)
+    bufArg.copyOut(tc->getMemProxy());
+
+  return (nread == -1) ? -errno_after_call : nread;
 }
 
 SyscallReturn
